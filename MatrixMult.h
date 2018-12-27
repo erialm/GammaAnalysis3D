@@ -4,8 +4,8 @@
 class Matrix
 {
         private:
-                double* Mat;
                 size_t Rows, Columns, Slices;
+                double* Mat;
                 double XCorner, YCorner, ZCorner;
                 double SizeX, SizeY, SizeZ;
 
@@ -22,6 +22,9 @@ class Matrix
                 double GetXPosition(size_t Column) const noexcept {return XCorner+Column*SizeX;}
                 double GetYPosition(size_t Row) const noexcept {return YCorner+Row*SizeY;}
                 double GetZPosition(size_t Slice) const noexcept {return ZCorner+Slice*SizeZ;}
+                double GetSizeX() const noexcept {return SizeX;}
+                double GetSizeY() const noexcept {return SizeY;}
+                double GetSizeZ() const noexcept {return SizeZ;}
 
                 void SetXCorner(double X) noexcept {XCorner = X;}
                 void SetYCorner(double Y) noexcept {YCorner = Y;}
@@ -40,6 +43,7 @@ class Matrix
                 Matrix& operator=(Matrix&&);
 
                 void PrintMatrix(size_t) const noexcept;
+                void PrintMatrix(std::string) const noexcept;
                 Matrix Transpose() const noexcept;
                 void SwapRows(size_t,size_t) noexcept;
                 void GaussianElimination(Matrix&) noexcept;

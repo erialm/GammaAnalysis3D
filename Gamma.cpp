@@ -14,11 +14,22 @@ struct Point
 
 Matrix ReadMatrix(std::string Path) noexcept
 {
-        std::ifstream Input{Path};
+        //Change Geant4 output to write corner coordinates along with number of voxels before dose data
+        std::ifstream InputFile{Path,std::ios::binary};
         size_t Dim[DIM-1];
         double Coor[DIM-1];
         double VoxSize[DIM-1];
-        for (size_t i=0;i<(DIM-1);++i) Input >> Dim[i] >> Coor[i] >> VoxSize[i];
+        double InputD;
+        int InputI;
+        for (size_t i=0;i<(DIM-1);++i)
+        {
+                InputFile.read(reinterpret_cast<char*>(&InputI),sizeof(int));
+                InputFile.read(reinterpret_cast<char*>(&InputD),sizeof(double));
+                Dim[i]=InputI;
+                Coor[i]=InputD;
+                InputFile.read(reinterpret_cast<char*>(&InputD),sizeof(double));
+                VoxSize[i]=InputD;
+        }
         Matrix Image(Dim[0],Dim[1],Dim[2]);
         Image.SetXCorner(Coor[0]);
         Image.SetYCorner(Coor[1]);
@@ -30,7 +41,11 @@ Matrix ReadMatrix(std::string Path) noexcept
         {
                 for (size_t j=0;j<Dim[1];++j)
                 {
-                        for (size_t k=0;k<Dim[0];++k) Input>>Image(j,k,i);
+                        for (size_t k=0;k<Dim[0];++k)
+                        {
+                                InputFile.read(reinterpret_cast<char*>(&InputD),sizeof(double));
+                                Image(j,k,i)=InputD;
+                        }
                 }
         }
         return Image;
@@ -300,7 +315,7 @@ double CheckSimplex(const std::vector<Point>& Simplex, const double* const R) no
         return GAMMA;
 }
 
-double CheckTetraheda(const Matrix& Eva, const double D, const double d, const double* const R, const size_t Row, const size_t Column, const size_t Slice) noexcept
+double Get3DGamma(const Matrix& Eva, const double D, const double d, const double* const R, const size_t Row, const size_t Column, const size_t Slice) noexcept
 {
         using std::vector;
         vector<Point> Cube=CreateCube(Eva,Row,Column,Slice,D,d);
@@ -356,6 +371,13 @@ Matrix Gamma3D(const Matrix& Ref, const Matrix& Eva, double Dose, const double d
         using std::end;
 
         Matrix Gamma(Ref.GetRows(),Ref.GetColumns(),Ref.GetSlices(),std::numeric_limits<double>::quiet_NaN());
+        Gamma.SetXCorner(Ref.GetXPosition(0));
+        Gamma.SetYCorner(Ref.GetYPosition(0));
+        Gamma.SetZCorner(Ref.GetZPosition(0));
+        
+        Gamma.SetSizeX(Ref.GetSizeX());
+        Gamma.SetSizeY(Ref.GetSizeY());
+        Gamma.SetSizeZ(Ref.GetSizeZ());
         vector<double> ReturnGamma;
         ReturnGamma.reserve(1000);
 
@@ -396,7 +418,7 @@ Matrix Gamma3D(const Matrix& Ref, const Matrix& Eva, double Dose, const double d
                                                 {
                                                         Er[2]=Eva.GetZPosition(EvaSli)/d;
                                                         if (abs(Rr[2]-Er[2])>SL) continue;
-                                                        ReturnGamma.push_back(CheckTetraheda(Eva,D,d,Rr,EvaRow,EvaCol,EvaSli));
+                                                        ReturnGamma.push_back(Get3DGamma(Eva,D,d,Rr,EvaRow,EvaCol,EvaSli));
                                                 }
                                         }
                                 }

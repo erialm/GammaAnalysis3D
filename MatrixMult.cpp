@@ -47,6 +47,45 @@ void Matrix::PrintMatrix(size_t Slice) const noexcept
         cout << '\n';
 }
 
+void Matrix::PrintMatrix(std::string OutputPath) const noexcept
+{
+        std::ofstream Output(OutputPath,std::ios::binary);
+        int NoRows=Rows;
+        int NoColumns=Columns;
+        int NoSlices=Slices;
+
+        double XCorn=GetXPosition(0);
+        double YCorn=GetYPosition(0);
+        double ZCorn=GetZPosition(0);
+
+        double XSize=GetSizeX();
+        double YSize=GetSizeY();
+        double ZSize=GetSizeZ();
+        std::cout << XCorn << ' ' << YCorn << ' ' << ZCorn << '\n';
+        std::cout << XSize << ' ' << YSize << ' ' << ZSize << '\n';
+
+        Output.write(reinterpret_cast<char*>(&NoColumns),sizeof(int));
+        Output.write(reinterpret_cast<char*>(&XCorn),sizeof(double));
+        Output.write(reinterpret_cast<char*>(&XSize),sizeof(double));
+        Output.write(reinterpret_cast<char*>(&NoRows),sizeof(int));
+        Output.write(reinterpret_cast<char*>(&YCorn),sizeof(double));
+        Output.write(reinterpret_cast<char*>(&YSize),sizeof(double));
+        Output.write(reinterpret_cast<char*>(&NoSlices),sizeof(int));
+        Output.write(reinterpret_cast<char*>(&ZCorn),sizeof(double));
+        Output.write(reinterpret_cast<char*>(&ZSize),sizeof(double));
+
+        for (int i=0;i<NoSlices;++i)
+        {
+                for (int j=0;j<NoRows;++j)
+                {
+                        for (int k=0;k<NoColumns;++k)
+                        {
+                                double Value=(*this)(j,k,i);
+                                Output.write(reinterpret_cast<char*>(&Value),sizeof(double));
+                        }
+                }
+        }
+}
 Matrix Matrix::operator*(const Matrix& Rhs)
 {
         using std::cout;
@@ -138,12 +177,3 @@ Matrix Matrix::BackSubstitute(Matrix& B) noexcept
         }
         return x;
 }
-
-/*Matrix Matrix::MLDivide(Matrix& B) noexcept
-{
-       (*this).GaussianElimination(B);
-       Matrix x = (*this).BackSubstitute(B);
-       return x;
-}*/
-
-
